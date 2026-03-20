@@ -3,14 +3,12 @@ import jwt from "jsonwebtoken";
 const logInUser = async (req, res) => {
   try {
     const user = req.user; // comes from passport
-    console.log(req.user);
     if (!user) {
       return res.status(400).json({
         success: false,
         message: "Authentication failed",
       });
     }
-
     // Create token
     const token = jwt.sign(
       {

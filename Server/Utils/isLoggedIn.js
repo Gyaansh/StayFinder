@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const isLoggedIn = (req, res, next) => {
+const isLoggedIn = (req, res, next) => { //checks if user is logged in
   const token = req.cookies?.token;
 
   if (!token) {

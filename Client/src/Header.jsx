@@ -1,11 +1,53 @@
 import NavBar from "./NavBar";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { showLoading, showSuccess } from "./Utils/ToastBar";
 
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  const logOutUser = async ()=>{
+    try{
+      const res = await fetch("/api/user/logout",{
+      method :"POST",
+      credentials: "include",
+      headers : {
+        "Content-Type": "application/json",
+      },
+      body : JSON.stringify({})
+    });
+    const result = await res.json();
+    if(result.success){
+      setLoggedIn(false);
+      showLoading("Logging out User");
+      setTimeout(() => {
+        showSuccess("Logged Out Successfully");
+      }, 3000);
+    }
+    } catch(err){
+      throw err.message;
+    }
+  }
+
+
+  const isLoggedIn = async () => {
+    try {
+      const res = await fetch("/api/user/checkauth", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      
+      if (data.loggedIn) {
+        setLoggedIn(true);
+      }
+    } catch (err) {
+      throw err.message;
+    }
+  };
+  isLoggedIn();
 
   return (
     <header className="flex flex-col md:flex-row md:items-center md:justify-between px-6 py-4 bg-white shadow-md gap-4 relative">
@@ -26,13 +68,13 @@ function Header() {
       <div className="hidden md:flex items-center gap-4">
         <button
           onClick={() =>
-            navigate("/login", {
+            {loggedIn? logOutUser() : (navigate("/login", {
               state: { from: location },
-            })
+            }))}
           }
           className="px-4 py-2 rounded-lg hover:bg-gray-100 transition"
         >
-          Login
+          {loggedIn? "LogOut" : "LogIn"}
         </button>
 
         <button

@@ -10,7 +10,7 @@ import Footer from "../Footer";
 import { useNavigate, useLocation } from "react-router-dom";
 
 
-const Signup = () => {
+const Login = () => {
  const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,6 +30,9 @@ const Signup = () => {
 
     if (isSubmiting) return;
     setIsSubmiting(true);
+    setTimeout(() => {
+      setIsSubmiting(false);
+    }, 2000);
     const res = await loginUser(user);
     showPromise(
       res,
@@ -37,10 +40,11 @@ const Signup = () => {
       "Login Successfull",
       "Some Error Occured",
     );
-    setTimeout(() => {
-      setIsSubmiting(false);
-      navigate("/");
-      }, 3000);
+    if(await res.success){
+      setTimeout(() => {
+        navigate("/");
+        }, 3000);
+    }
   }
 
   const handleChange = (e) => {
@@ -135,7 +139,7 @@ const Signup = () => {
                     active:scale-95 active:shadow-inner"
             disabled={isSubmiting}
           >
-            {isSubmiting ? "Creating..." : "Signup"}
+            {isSubmiting ? "Creating..." : "Log In"}
           </button>
         </form>
 
@@ -181,4 +185,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default Login;

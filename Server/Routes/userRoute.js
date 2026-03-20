@@ -7,34 +7,16 @@ import passport from "passport";
 import isAlreadyLoggedIn from "../Utils/iaAlreadyLoggedIn.js";
 import isLoggedIn from "../Utils/isLoggedIn.js";
 import checkAuth from "../Controllers/checkAuth.js";
-
-
+import logOutUser from "../Controllers/logOutUser.js";
+import authenticateUser from "../Utils/authenticateUser.js";
 const Router = express.Router();
 
 Router.post("/signup", userValidator, wrapAsync(userSignUp),logInUser);
 
-Router.post(
-  "/login",
-  isAlreadyLoggedIn,
-  (req, res, next) => {
-    passport.authenticate("local", { session: false }, (err, user, info) => {
-      if (err) return next(err);
+Router.post("/login", isAlreadyLoggedIn,authenticateUser, logInUser,);
 
-      if (!user) {
-        // YOU control failure here 👇
-        return res.status(401).json({
-          success: false,
-          message: info.message || "Invalid credentials",
-        });
-      }
+Router.get("/checkauth",isLoggedIn, checkAuth); //Checks if the user is logged in 
 
-      req.user = user;
-      next(); // now goes to logInUser
-    })(req, res, next);
-  },
-  logInUser,
-);
-
-Router.get("/checkauth",isLoggedIn,checkAuth);
+Router.post("/logout",logOutUser);
 
 export default Router;
