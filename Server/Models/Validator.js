@@ -1,17 +1,27 @@
 import joi from "joi";
 import ExpressError from "../Utils/ExpressError.js";
+import mongoose from "mongoose";
 const validSchema = joi.object({
   title: joi.string().required(),
   description: joi.string().required(),
   price: joi.number().min(1).required(),
-  URL: joi.array().min(1).required(),
+  URL: joi.array().items(joi.string().uri()).min(1).required(),
   location: joi.string().required(),
   country: joi.string().required(),
+  owner: joi
+    .string()
+    .custom((value, helpers) => {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        return helpers.error("any.invalid");
+      }
+      return value;
+    })
+    .required(),
 });
 export const schemaValidator = (req, res, next) => {
-  let { err } = validSchema.validate(req.body);
-  if (err) {
-    throw new ExpressError(404, err.message);
+  let { error } = validSchema.validate(req.body);
+  if (error) {
+    throw new ExpressError(400, err.message);
   } else {
     next();
   }
@@ -21,6 +31,15 @@ export const schemaValidator = (req, res, next) => {
 const validReviewSchema = joi.object({
   content: joi.string().min(10).max(500).required(),
   rating: joi.number().min(1).max(5).required(),
+  createdBy: joi
+    .string()
+    .custom((value, helpers) => {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        return helpers.error("any.invalid");
+      }
+      return value;
+    })  
+    .required(),
 });
 
 // Middleware to enforce review schema rules before processing request
@@ -62,7 +81,7 @@ export const userValidator = (req, res, next) => {
   if (error) {
     return res.status(400).json({
       field: "validation",
-      message: error.details.map(err => err.message),
+      message: error.details.map((err) => err.message),
     });
   }
 

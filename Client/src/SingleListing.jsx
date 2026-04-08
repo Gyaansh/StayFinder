@@ -1,11 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@mui/material";
 import { useEffect, useState, useCallback } from "react";
-import Reviews from "../reviews";
-import Footer from "../Footer";
-import Header from "../header";
-import getUser from "../Utils/getUser";
-
+import getUsername from "./Utils/getUsername";
+import Reviews from "./Reviews";
 const SingleListing = () => {
   const { id } = useParams();
 
@@ -18,8 +15,9 @@ const SingleListing = () => {
     try {
       const res = await fetch(`/api/listing/${id}`);
       const data = await res.json();
+      const owner = data.data.owner.username;
       const images = data.data.URL || [];
-      setListing({ ...data.data, URL: images });
+      setListing({ ...data.data, URL: images, owner: owner });
       setActiveImage((prev) => prev || images[0] || "");
     } catch (err) {
       console.error(err);
@@ -30,9 +28,9 @@ const SingleListing = () => {
 
   useEffect(() => {
     async function getOwner() {
-      if(!listing) return;
-      let userData = await getUser();
-      if(listing.owner?.username === userData.data){
+      if (!listing) return;
+      let userData = await getUsername();
+      if (listing.owner === userData) {
         setIsOwner(true);
       }
     }
@@ -42,8 +40,6 @@ const SingleListing = () => {
   useEffect(() => {
     fetchListing();
   }, [fetchListing]);
-
-
 
   if (loading) {
     return (
@@ -63,7 +59,6 @@ const SingleListing = () => {
 
   return (
     <>
-      <Header />
       <div className="min-h-screen bg-orange-50 pt-10">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* IMAGE GALLERY */}
@@ -114,13 +109,13 @@ const SingleListing = () => {
 
             <div className="cursor-pointer mt-5 flex items-center gap-4 rounded-2xl bg-white px-4 py-3 shadow-md ring-1 ring-gray-100">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-400 text-lg font-bold text-white">
-                {listing.owner?.username?.charAt(0).toUpperCase()}
+                {listing.owner.charAt(0).toUpperCase()}
               </div>
 
               <div>
                 <p className="text-sm text-gray-500">Listing Owner</p>
                 <p className="text-lg font-semibold text-gray-800">
-                  {listing.owner?.username}
+                  {listing.owner}
                 </p>
               </div>
             </div>
@@ -156,7 +151,6 @@ const SingleListing = () => {
             </p>
           </div>
         </div>
-
         {/* REVIEWS SECTION */}
         <div className="max-w-6xl mx-auto mt-10">
           <Reviews
@@ -165,7 +159,6 @@ const SingleListing = () => {
             onReviewAdded={fetchListing}
           />
         </div>
-        <Footer />
       </div>
     </>
   );

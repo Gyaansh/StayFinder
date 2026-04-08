@@ -9,6 +9,6 @@ export default function getUsername(req, res) {
 
   res.status(200).send({
     success: true,
-    data: decoded.username,
+    data: decoded,
   });
 }

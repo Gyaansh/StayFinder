@@ -6,7 +6,7 @@ export default async function addReview(req, res) {
     // Extract listing ID from route parameters
     const { id } = req.params;
     // Extract review data from the request body
-    const { content, rating } = req.body;
+    const { content, rating, createdBy } = req.body;
 
     // Verify that the target listing exists
     const listing = await Listing.findById(id);
@@ -15,7 +15,7 @@ export default async function addReview(req, res) {
     }
     
     // Create and save the new review document
-    const newReview = new Review({ content, rating });
+    const newReview = new Review({ content, rating, createdBy });
     await newReview.save();
 
     // Associate the new review with the listing

@@ -1,4 +1,4 @@
-import SingleListing from "./Pages/SingleListing";
+import SingleListingPage from "./Pages/SingleListingPage";
 import { Routes, Route } from "react-router-dom";
 import "./tailwind.css";
 import Signup from "./Pages/Signup";
@@ -7,15 +7,12 @@ import Login from "./Pages/Login";
 import HomePage from "./Pages/HomePage";
 import Newlisting from "./Pages/NewListing";
 import ProtectedRoute from "./Utils/ProtectedRoute";
-import EditListing from "./EditListing";
+import EditListingPage from "./Pages/EditListingPage"
 function App() {
   return (
     <>
       <Toaster
         position="top-center"
-        // toastOptions={{
-        //   duration: 3000,
-        // }}
       />
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -31,14 +28,14 @@ function App() {
           path="/listing/edit/:id"
           element={
             <ProtectedRoute>
-              <EditListing/>
+              <EditListingPage/>
             </ProtectedRoute>
           }
         />
 
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-          <Route path="/listing/:id" element={<SingleListing />} />
+          <Route path="/listing/:id" element={<SingleListingPage />} />
 
       </Routes>
     </>

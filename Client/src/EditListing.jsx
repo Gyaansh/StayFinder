@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { showLoading, showSuccess } from "./Utils/ToastBar";
+import getUserId from "./Utils/getUserId";
 
 const defaultFormData = {
   title: "",
@@ -20,17 +21,28 @@ const defaultFormData = {
   price: "",
   URL: [""],
   description: "",
+  owner : ""
 };
 
 export default function EditListing({ mode : propMode = 'new' }) {
   const location = useLocation();
   const mode =  location.state?.mode || propMode;
+  
+
   const { id } = useParams();
   
   const navigate = useNavigate();
   const [formData, setFormData] = useState(defaultFormData);
   const [isSubmiting, setIsSubmiting] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+
+  if(mode === "new"){
+    const userInfo = async ()=>{
+      const UserId = await getUserId();
+      setFormData({...formData, owner:UserId});
+    }
+    userInfo();
+  }
 
   let loadingText = mode === "edit" ? "Making Changes" : "Adding New Listing";
   let successText =
@@ -53,6 +65,7 @@ export default function EditListing({ mode : propMode = 'new' }) {
           price: initialData.price || "",
           URL: initialData.URL,
           description: initialData.description || "",
+          owner : initialData.owner.username
         });
       } else {
         setFormData(defaultFormData);
@@ -63,7 +76,8 @@ export default function EditListing({ mode : propMode = 'new' }) {
 
   const fetchApi = async () => {
     try {
-      const api = (mode === "edit"? `/api/listing/edit/${id}`: `/api/listing/newlisting`);
+     
+      const api = (mode === "edit"? `/api/listing/edit/${id}`: `/api/listing/newlistener`);
       const apiMethod = (mode==="edit"? "PUT": "POST");
       const res = await fetch(api, {
         method: apiMethod,
