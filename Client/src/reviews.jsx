@@ -24,17 +24,15 @@ export default function Reviews({ listingId, reviews = [], onReviewAdded }) {
     return Object.keys(newErrors).length === 0;
   };
 
+  
   useEffect(()=>{
-    let madeBy = '';
+    
     async function userInfo(){
-      madeBy = await getUserId();
+      const madeBy = await getUserId();
       setCreatedBy(madeBy);
-      console.log(madeBy);
     }
-    userInfo().then(()=>{
-      console.log(madeBy);
-    })
-  })
+    userInfo();
+  },[]);
 
 
   // Handles the submission of a new review to the server
@@ -57,7 +55,10 @@ export default function Reviews({ listingId, reviews = [], onReviewAdded }) {
       const data = await res.json();
       if (!res.ok) {
         showError(data.message);
+        console.log(data);
         throw new Error("Failed to submit review");
+      }else{
+        console.log(data);
       }
       setContent("");
       setRating(0);
@@ -98,7 +99,7 @@ export default function Reviews({ listingId, reviews = [], onReviewAdded }) {
 
                 {/* 👇 Made by */}
                 <span className="text-xs font-medium text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
-                  by {reviews.createdBy || "Anonymous"}
+                  by {rev.createdBy?.username || "Anonymous"}
                 </span>
               </div>
 

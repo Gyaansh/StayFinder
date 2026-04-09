@@ -10,7 +10,7 @@ export const showPromise = (promise,waiting, messageResolve, messageReject)=>{
     const delay = (ms) => new Promise(res => setTimeout(res, ms));
     const wrappedPromise = Promise.all([
         promise,
-        delay(2000) // ensures at least 2 sec loading
+        delay(1000) // ensures at least 2 sec loading
     ]);
     toast.promise(wrappedPromise, {
         loading: waiting,

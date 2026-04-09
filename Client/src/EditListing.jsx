@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import getListingById from "./Utils/getListingById";
 import {
@@ -11,7 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { showLoading, showSuccess } from "./Utils/ToastBar";
+import { showError, showLoading, showSuccess } from "./Utils/ToastBar";
 import getUserId from "./Utils/getUserId";
 
 const defaultFormData = {
@@ -21,28 +21,57 @@ const defaultFormData = {
   price: "",
   URL: [""],
   description: "",
-  owner : ""
+  // owner : ""
 };
 
-export default function EditListing({ mode : propMode = 'new' }) {
+export default function EditListing({ mode: propMode = "new" }) {
   const location = useLocation();
-  const mode =  location.state?.mode || propMode;
-  
-
+  const mode = location.state?.mode || propMode;
   const { id } = useParams();
-  
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState(defaultFormData);
   const [isSubmiting, setIsSubmiting] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
 
-  if(mode === "new"){
-    const userInfo = async ()=>{
-      const UserId = await getUserId();
-      setFormData({...formData, owner:UserId});
+  useEffect(() => {
+    if (mode === "new") {
+      const userInfo = async () => {
+        console.log("called");
+        const UserId = await getUserId();
+        setFormData((prev) => ({
+          ...prev,
+          owner: UserId,
+        }));
+      };
+      userInfo();
     }
-    userInfo();
-  }
+  }, [id]);
+
+  const fetchData = useCallback(async () => {
+    if (mode === "edit") {
+      let initialData = await getListingById(id);
+      console.log(initialData);
+      setFormData({
+        title: initialData.title || "",
+        location: initialData.location || "",
+        country: initialData.country || "India",
+        price: initialData.price || "",
+        URL: initialData.URL,
+        description: initialData.description || "",
+        owner: initialData.owner?._id ,
+      });
+    } else {
+      setFormData(defaultFormData);
+    }
+  }, [mode]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+
+
 
   let loadingText = mode === "edit" ? "Making Changes" : "Adding New Listing";
   let successText =
@@ -54,31 +83,12 @@ export default function EditListing({ mode : propMode = 'new' }) {
 
   let redirect = mode === "edit" ? `/listing/${id}` : "/";
   let heading = mode === "edit" ? "Edit Listing" : "Add Listing";
-  useEffect(() => {
-    const fetchData = async () => {
-      if (mode === "edit") {
-        let initialData = await getListingById(id);
-        setFormData({
-          title: initialData.title || "",
-          location: initialData.location || "",
-          country: initialData.country || "India",
-          price: initialData.price || "",
-          URL: initialData.URL,
-          description: initialData.description || "",
-          owner : initialData.owner.username
-        });
-      } else {
-        setFormData(defaultFormData);
-      }
-    };
-    fetchData();
-  }, [id]);
 
   const fetchApi = async () => {
     try {
-     
-      const api = (mode === "edit"? `/api/listing/edit/${id}`: `/api/listing/newlistener`);
-      const apiMethod = (mode==="edit"? "PUT": "POST");
+      const api =
+        mode === "edit" ? `/api/listing/edit/${id}` : `/api/listing/newlisting`;
+      const apiMethod = mode === "edit" ? "PUT" : "POST";
       const res = await fetch(api, {
         method: apiMethod,
         credentials: "include",
@@ -93,17 +103,40 @@ export default function EditListing({ mode : propMode = 'new' }) {
           showSuccess(successText);
           navigate(redirect);
         }, 2000);
-      }else {
+      } else {
         setTimeout(() => {
-        setIsSubmiting(false);
-      }, 2000);
+          setIsSubmiting(false);
+        }, 2000);
       }
-
-      
     } catch (err) {
       console.error("Request failed:", err);
     }
   };
+
+
+  const handleDelete = async ()=>{
+    const res = await fetch(`/api/listing/delete/${id}`,{
+      method : "delete",
+      credentials : "include",
+      headers : {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify()
+    });
+    
+    
+    if(res.ok){
+      showLoading("Deleting");
+      setTimeout(() => {
+        showSuccess("Deleted");
+        navigate("/");
+      }, 2000);
+      return;
+    } else{
+      showError(data.message);
+    }
+  }
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -153,7 +186,7 @@ export default function EditListing({ mode : propMode = 'new' }) {
 
   return (
     <div className="min-h-screen bg-[#f8f4ee] px-4 py-8 md:px-10">
-      <div className="mx-auto max-w-6xl"> 
+      <div className="mx-auto max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#222222] md:text-4xl">
             {heading}
@@ -210,11 +243,9 @@ export default function EditListing({ mode : propMode = 'new' }) {
                 {formData.description || "Description will appear here..."}
               </p>
               <button
-              hidden={mode !== "edit"}
+                hidden={mode !== "edit"}
                 type="button"
-                onClick={() => 
-                  setShowDelete(true)
-                }
+                onClick={() => setShowDelete(true)}
                 className="cursor-pointer mt-4 w-full rounded-2xl border border-red-200 bg-red-50 px-6 py-3 text-sm font-semibold text-red-600 hover:bg-red-100 transition"
               >
                 Delete Listing
@@ -231,15 +262,22 @@ export default function EditListing({ mode : propMode = 'new' }) {
 
                 <div className="mt-4 flex gap-3">
                   <button
-                    // onClick={handleDelete}
-                    className="flex-1 bg-red-500 text-white py-2 rounded-xl cursor-pointer"
+                    onClick={handleDelete}
+                   className="flex-1 bg-red-500 text-white py-2 rounded-xl cursor-pointer 
+transition-all duration-300
+hover:bg-red-600 hover:shadow-[0_0_15px_rgba(239,68,68,0.7)]
+active:scale-95"
                   >
                     Delete
                   </button>
 
                   <button
                     onClick={() => setShowDelete(false)}
-                    className="flex-1 border py-2 rounded-xl cursor-pointer"
+                    className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-xl cursor-pointer
+transition-all duration-300 ease-in-out
+hover:bg-gray-100 hover:text-black
+hover:shadow-[0_0_12px_rgba(0,0,0,0.15)]
+active:opacity-90"
                   >
                     Cancel
                   </button>
@@ -308,6 +346,7 @@ export default function EditListing({ mode : propMode = 'new' }) {
                   type="number"
                   name="price"
                   value={formData.price}
+                  onWheel={(e) => e.currentTarget.blur()}
                   onChange={handleChange}
                   placeholder="Enter price"
                   className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"

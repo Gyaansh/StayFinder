@@ -8,10 +8,6 @@ async function userSignUp(req, res,next) {
     });
     const registeredUser = await User.register(newUser, password); // Save new user in Database
     req.user = registeredUser;
-    // res.status(201).json({
-    //   message: "Registered successfully",
-    // });
-    // console.log("Afterrrr");
     next();
 
   } catch (err) {

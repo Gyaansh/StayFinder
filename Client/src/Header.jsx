@@ -22,10 +22,7 @@ function Header() {
     const result = await res.json();
     if(result.success){
       setLoggedIn(false);
-      showLoading("Logging out User");
-      setTimeout(() => {
-        showSuccess("Logged Out Successfully");
-      }, 3000);
+      showSuccess("Logged Out Successfully");
     }
     } catch(err){
       throw err.message;

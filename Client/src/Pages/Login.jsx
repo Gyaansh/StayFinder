@@ -43,7 +43,7 @@ const Login = () => {
     if(await res.success){
       setTimeout(() => {
         navigate("/");
-        }, 3000);
+        }, 1000);
     }
   }
 

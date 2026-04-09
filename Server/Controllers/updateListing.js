@@ -3,7 +3,6 @@ async function updateListing(req, res) {
   try {
     const { id } = req.params;
     const { title, description, URL, price, location, country } = req.body;
-
     const updatedListing = await Listing.findByIdAndUpdate(
       id,
       {

@@ -2,7 +2,12 @@ import Listing from "../Models/listingSchema.js";
 export default async function getListingByid(req, res) {
   try {
     const { id } = req.params;
-    const listing = await Listing.findById(id).populate("reviews").populate('owner');
+    const listing = await Listing.findById(id)
+      .populate({
+        path: "reviews",
+        populate: { path: "createdBy", select: "username" },
+      })
+      .populate("owner");
 
     if (!id) {
       return res.ok.status(404).json({ message: "Listing not found" });

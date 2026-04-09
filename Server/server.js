@@ -1,7 +1,6 @@
 import cors from "cors";
 import DbConnect from "./Config/Database.js"
 import express from "express";
-import jwt from 'jsonwebtoken';
 import passport from "passport";
 import  LocalStrategy from 'passport-local';
 import cookieParser from "cookie-parser";
@@ -34,9 +33,15 @@ app.use("/api/user",userRoute);
 app.use((req,res,next)=>{
     next(new ExpressError(404,"Page not found"));
 });
-app.use((err,req,res,next)=>{
-    let {statusCode,message} = err;
-    res.status(statusCode).send(message);
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+
+    res.status(statusCode).json({
+        success: false,
+        statusCode,
+        message
+    });
 });
 
 app.listen(port, ()=>{
