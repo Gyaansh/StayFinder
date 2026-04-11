@@ -1,4 +1,4 @@
-import Header from "../header";
+import Header from "../Header";
 import CardList from "../CardList";
 import Footer from "../Footer";
 

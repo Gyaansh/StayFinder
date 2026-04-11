@@ -7,37 +7,37 @@ import Login from "./Pages/Login";
 import HomePage from "./Pages/HomePage";
 import Newlisting from "./Pages/NewListing";
 import ProtectedRoute from "./Utils/ProtectedRoute";
-import EditListingPage from "./Pages/EditListingPage"
+import EditListingPage from "./Pages/EditListingPage";
+import ScrollToTop from "./ScrollToTop";
+
 function App() {
   return (
     <>
-      <Toaster
-        position="top-center"
-      />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route
-          path="/listing/new"
-          element={
-            <ProtectedRoute>
-              <Newlisting/>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/listing/edit/:id"
-          element={
-            <ProtectedRoute>
-              <EditListingPage/>
-            </ProtectedRoute>
-          }
-        />
+      <Toaster position="top-center" />
+      <ScrollToTop/>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route
+            path="/listing/new"
+            element={
+              <ProtectedRoute>
+                <Newlisting />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/listing/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditListingPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/listing/:id" element={<SingleListingPage />} />
-
-      </Routes>
+        </Routes>
     </>
   );
 }

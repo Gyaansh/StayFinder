@@ -1,9 +1,8 @@
-  import { Link } from "react-router-dom";
-
+import { Link } from "react-router-dom";
   const Card = ({list}) => {
 
-    let [dollar, cent=""] = list.price.toString().split('.');
-    cent = cent.slice(0,2)
+    let [rupees, paise=""] = list.price.toString().split('.');
+    paise = paise.slice(0,2)
     return (
       <>
         <Link to={`/listing/${list._id}`}>
@@ -11,6 +10,7 @@
             <img
               src={list.URL[0]}
               alt={list.title}
+              loading="lazy"
               width={250}
               height={250}
               className="rounded-2xl "
@@ -18,7 +18,7 @@
             <div className="p-1 ">
               <h3>{list.title}</h3>
               <p className="text-xs mt-1 overflow-hidden text-ellipsis">{list.description}</p>
-              <h2 className="font-medium text-xl ">{dollar}{cent!=="00" && <sup className="text-xs relative -top-3">{cent}</sup>}$</h2>
+              <h2 className="font-medium text-xl ">₹{rupees}{paise!=="00" && <sup className="text-xs relative -top-3">{paise}</sup>}</h2>
             </div>
           </div>
         </Link>
