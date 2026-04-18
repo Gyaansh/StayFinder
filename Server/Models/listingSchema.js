@@ -7,13 +7,22 @@ const listingSchema =new Schema({
         required:true
     },
     description : String,
-    URL:{
+    images:{
         required : true,
-        type:[String],
+        type:[{
+            public_id:{
+                type:String,
+                required:true
+            },
+            url:{
+                type:String,
+                required:true
+            }
+        }],
         validate:{
             validator:(arr)=>{
                 if(arr.length > 15) return false;
-                else true;
+                return true;
             },
             message: "Too many photos"
         }

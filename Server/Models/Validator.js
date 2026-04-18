@@ -1,11 +1,11 @@
 import joi from "joi";
 import ExpressError from "../Utils/ExpressError.js";
 import mongoose from "mongoose";
+
 const validSchema = joi.object({
   title: joi.string().required(),
   description: joi.string().required(),
   price: joi.number().min(1).required(),
-  URL: joi.array().items(joi.string().uri()).min(1).required(),
   location: joi.string().required(),
   country: joi.string().required(),
   owner: joi
@@ -16,12 +16,23 @@ const validSchema = joi.object({
       }
       return value;
     })
-    .required(),
+    .optional(),
+  keepImageIds: joi.alternatives().try(
+    joi.string(),
+    joi.array().items(joi.string()),
+  ),
 });
+
 export const schemaValidator = (req, res, next) => {
-  let { error } = validSchema.validate(req.body);
+  let { error } = validSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
   if (error) {
-    throw new ExpressError(400, err.message);
+    throw new ExpressError(
+      400,
+      error.details.map((detail) => detail.message).join(", "),
+    );
   } else {
     next();
   }
@@ -44,9 +55,9 @@ const validReviewSchema = joi.object({
 
 // Middleware to enforce review schema rules before processing request
 export const reviewValidator = (req, res, next) => {
-  let { err } = validReviewSchema.validate(req.body);
-  if (err) {
-    throw new ExpressError(404, err.message);
+  let { error } = validReviewSchema.validate(req.body);
+  if (error) {
+    throw new ExpressError(404, error.message);
   } else {
     next();
   }

@@ -16,9 +16,9 @@ const SingleListing = () => {
       const res = await fetch(`/api/listing/${id}`);
       const data = await res.json();
       const owner = data.data.owner.username;
-      const images = data.data.URL || [];
-      setListing({ ...data.data, URL: images, owner: owner });
-      setActiveImage((prev) => prev || images[0] || "");
+      const images = data.data.images || [];
+      setListing({ ...data.data, images: images, owner: owner });
+      setActiveImage((prev) => prev || images[0]?.url || "");
     } catch (err) {
       console.error(err);
     } finally {
@@ -70,15 +70,15 @@ const SingleListing = () => {
             />
 
             <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
-              {listing.URL?.map((img, index) => (
+              {listing.images?.map((img, index) => (
                 <img
                   key={index}
-                  src={img}
-                  onClick={() => setActiveImage(img)}
+                  src={img.url}
+                  onClick={() => setActiveImage(img.url)}
                   alt="preview"
                   className={`h-24 w-36 object-cover rounded-xl cursor-pointer border-2 transition
       ${
-        activeImage === img
+        activeImage === img.url
           ? "border-orange-600"
           : "border-orange-300 hover:border-orange-500"
       }`}

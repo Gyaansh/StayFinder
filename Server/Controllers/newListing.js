@@ -1,14 +1,21 @@
-// import mongoose from "mongoose";
 import Listing from "../Models/listingSchema.js";
-// import validSchema from "../Models/Validator.js";
+import processListingImages from "../Utils/processListingImages.js";
+
 async function newListing(req, res) {
   try {
-    // validSchema.validate(req.body);
-    let { title, description, URL, price, location, country, owner } = req.body;
+    const imageUrls = await processListingImages(req.files);
+
+    if (imageUrls.length === 0) {
+      return res.status(400).json({
+        message: "Please upload at least one image",
+      });
+    }
+
+    let { title, description, price, location, country, owner } = req.body;
     let newListing = new Listing({
       title: title,
       description: description,
-      URL: URL,
+      images: imageUrls,
       price: price,
       location: location,
       country: country,

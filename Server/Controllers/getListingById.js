@@ -9,8 +9,8 @@ export default async function getListingByid(req, res) {
       })
       .populate("owner");
 
-    if (!id) {
-      return res.ok.status(404).json({ message: "Listing not found" });
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
     }
     res.status(200).json({
       message: "ok",

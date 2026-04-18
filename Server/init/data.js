@@ -247,17 +247,3 @@ const URLS = [
   "https://cdn.mos.cms.futurecdn.net/b5nQoA94JPwDQJnsmMftBV.jpg",
   "https://cf.bstatic.com/xdata/images/hotel/max1024x768/500186631.jpg?k=6a11cf47ce872bc29c21755473d6f95bad3c17edac7bd566a8b0ff980512f2bb&o="
 ];
-// console.log(URLS.length);
-// let newData =[];
-// function modifiedListings(){ 
-//   newData = sampleListings.map((listing, index) => {
-//   return {
-//     ...listing,
-//     URL: [URLS[index],],
-//   };
-// });
-// }
-// modifiedListings();
-// console.log(newData);
-// // console.log(modifiedListings);
-// export default newData

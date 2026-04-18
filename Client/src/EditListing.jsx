@@ -1,16 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import getListingById from "./Utils/getListingById";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   MapPin,
   IndianRupee,
   FileText,
   Home,
   Image as ImageIcon,
-  Plus,
   Trash2,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import getListingById from "./Utils/getListingById";
 import { showError, showLoading, showSuccess } from "./Utils/ToastBar";
 import getUserId from "./Utils/getUserId";
 
@@ -19,176 +17,235 @@ const defaultFormData = {
   location: "",
   country: "India",
   price: "",
-  URL: [""],
   description: "",
-  // owner : ""
 };
 
-export default function EditListing({ mode: propMode = "new" }) {
-  const location = useLocation();
-  const mode = location.state?.mode || propMode;
-  const { id } = useParams();
+const createImagePreview = (image) => {
+  if (image.kind === "existing") {
+    return image.url;
+  }
 
+  return URL.createObjectURL(image.file);
+};
+
+export default function EditListing({ mode = "new" }) {
+  const location = useLocation();
+  const pageMode = location.state?.mode || mode;
+  const { id } = useParams();
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState(defaultFormData);
   const [images, setImages] = useState([]);
-
-  const [isSubmiting, setIsSubmiting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
 
   useEffect(() => {
-    if (mode === "new") {
-      const userInfo = async () => {
-        const UserId = await getUserId();
-        setFormData((prev) => ({
-          ...prev,
-          owner: UserId,
-        }));
-      };
-      userInfo();
-    }
-  }, [id]);
+    let ignore = false;
 
-  const fetchData = useCallback(async () => {
-    if (mode === "edit") {
-      let initialData = await getListingById(id);
-      console.log(initialData);
-      setFormData({
-        title: initialData.title || "",
-        location: initialData.location || "",
-        country: initialData.country || "India",
-        price: initialData.price || "",
-        URL: initialData.URL,
-        description: initialData.description || "",
-        owner: initialData.owner?._id,
-      });
-    } else {
-      setFormData(defaultFormData);
-    }
-  }, [mode]);
+    const loadListing = async () => {
+      if (pageMode === "edit") {
+        const initialData = await getListingById(id);
+
+        if (!initialData || ignore) {
+          return;
+        }
+
+        setFormData({
+          title: initialData.title || "",
+          location: initialData.location || "",
+          country: initialData.country || "India",
+          price: initialData.price || "",
+          description: initialData.description || "",
+        });
+        setImages(
+          (initialData.images || []).map((image) => ({
+            kind: "existing",
+            public_id: image.public_id,
+            url: image.url,
+          })),
+        );
+        return;
+      }
+
+      const userId = await getUserId();
+
+      if (!ignore) {
+        setFormData((prev) => ({
+          ...defaultFormData,
+          owner: userId,
+          country: prev.country || "India",
+        }));
+        setImages([]);
+      }
+    };
+
+    loadListing();
+
+    return () => {
+      ignore = true;
+    };
+  }, [id, pageMode]);
+
+  const imagePreviews = useMemo(
+    () =>
+      images.map((image) => ({
+        ...image,
+        previewUrl: createImagePreview(image),
+      })),
+    [images],
+  );
+  const newImageCount = images.filter((image) => image.kind === "new").length;
+  const fileInputText =
+    newImageCount === 0
+      ? "No new files selected"
+      : `${newImageCount} file${newImageCount > 1 ? "s" : ""} selected`;
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  let loadingText = mode === "edit" ? "Making Changes" : "Adding New Listing";
-  let successText =
-    mode === "edit"
-      ? "Changes Made Successfully"
-      : "Added New Listing Successfully";
-
-  let submitButtonText = mode === "edit" ? "Save Changes" : "Added New Listing";
-
-  let redirect = mode === "edit" ? `/listing/${id}` : "/";
-  let heading = mode === "edit" ? "Edit Listing" : "Add Listing";
-
-  const fetchApi = async () => {
-    try {
-      const api =
-        mode === "edit" ? `/api/listing/edit/${id}` : `/api/listing/newlisting`;
-      const apiMethod = mode === "edit" ? "PUT" : "POST";
-      const uploadFiles = new FormData();
-
-      images.forEach((file) => {
-        uploadFiles.append("images", file);
+    return () => {
+      imagePreviews.forEach((image) => {
+        if (image.kind === "new") {
+          URL.revokeObjectURL(image.previewUrl);
+        }
       });
-      uploadFiles.append("title", formData.title);
-      uploadFiles.append("location", formData.location);
-      uploadFiles.append("country", formData.country);
-      uploadFiles.append("price", formData.price);
-      uploadFiles.append("description", formData.description);
-      console.log(images.length);
+    };
+  }, [imagePreviews]);
 
-      //Api Call will send req.file-> images,  req.body-> text data
-      const res = await fetch(api, {
-        method: apiMethod,
-        credentials: "include",
-        body: uploadFiles,
-      });
+  const loadingText =
+    pageMode === "edit" ? "Saving listing changes" : "Adding new listing";
+  const successText =
+    pageMode === "edit"
+      ? "Changes saved successfully"
+      : "Listing added successfully";
+  const submitButtonText =
+    pageMode === "edit" ? "Save Changes" : "Add New Listing";
+  const redirect = pageMode === "edit" ? `/listing/${id}` : "/";
+  const heading = pageMode === "edit" ? "Edit Listing" : "Add Listing";
+  const subheading =
+    pageMode === "edit"
+      ? "Update your property details and keep your listing fresh."
+      : "Add your property details and upload listing photos.";
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setTimeout(() => {
-          showSuccess(successText);
-          navigate(redirect);
-        }, 2000);
-      } else {
-        setTimeout(() => {
-          setIsSubmiting(false);
-        }, 2000);
-      }
-    } catch (err) {
-      console.error("Request failed:", err);
-    }
-  };
-
-  const handleDelete = async () => {
-    const res = await fetch(`/api/listing/delete/${id}`, {
-      method: "delete",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(),
-    });
-
-    if (res.ok) {
-      showLoading("Deleting");
-      setTimeout(() => {
-        showSuccess("Deleted");
-        navigate("/");
-      }, 2000);
-      return;
-    } else {
-      showError(data.message);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleImageChange = (index, value) => {
-    const updatedURL = [...formData.URL];
-    updatedURL[index] = value;
+  const handleFilesChange = (event) => {
+    const selectedFiles = Array.from(event.target.files || []);
 
-    setFormData((prev) => ({
-      ...prev,
-      URL: updatedURL,
-    }));
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    setImages((prev) => {
+      const remainingSlots = 15 - prev.length;
+      const nextFiles = selectedFiles.slice(0, remainingSlots).map((file) => ({
+        kind: "new",
+        file,
+      }));
+
+      if (nextFiles.length < selectedFiles.length) {
+        showError("You can upload at most 15 images");
+      }
+
+      return [...prev, ...nextFiles];
+    });
+
+    event.target.value = "";
   };
 
-  const addImageField = () => {
-    setFormData((prev) => ({
-      ...prev,
-      URL: [...prev.URL, ""],
-    }));
+  const removeImage = (index) => {
+    setImages((prev) => prev.filter((_, imageIndex) => imageIndex !== index));
   };
 
-  const removeImageField = (index) => {
-    const updatedURL = formData.URL.filter((_, i) => i !== index);
+  const fetchApi = async () => {
+    const api =
+      pageMode === "edit" ? `/api/listing/edit/${id}` : `/api/listing/newlisting`;
+    const apiMethod = pageMode === "edit" ? "PUT" : "POST";
+    const uploadFiles = new FormData();
 
-    setFormData((prev) => ({
-      ...prev,
-      URL: updatedURL,
-    }));
+    uploadFiles.append("title", formData.title.trim());
+    uploadFiles.append("location", formData.location.trim());
+    uploadFiles.append("country", formData.country.trim());
+    uploadFiles.append("price", formData.price);
+    uploadFiles.append("description", formData.description.trim());
+
+    if (pageMode === "new" && formData.owner) {
+      uploadFiles.append("owner", formData.owner);
+    }
+
+    const keptImageIds = [];
+
+    images.forEach((image) => {
+      if (image.kind === "new") {
+        uploadFiles.append("images", image.file);
+      } else {
+        keptImageIds.push(image.public_id);
+      }
+    });
+
+    if (pageMode === "edit") {
+      uploadFiles.append("keepImageIds", JSON.stringify(keptImageIds));
+    }
+
+    const res = await fetch(api, {
+      method: apiMethod,
+      credentials: "include",
+      body: uploadFiles,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Request failed");
+    }
+
+    return data;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-    const cleanedData = {
-      ...formData,
-      URL: formData.URL.filter((url) => url.trim() !== ""),
-    };
+    if (images.length === 0) {
+      showError("Please add at least one image");
+      return;
+    }
 
-    showLoading(loadingText);
-    fetchApi();
+    try {
+      setIsSubmitting(true);
+      showLoading(loadingText);
+      await fetchApi();
+      showSuccess(successText);
+      navigate(redirect);
+    } catch (error) {
+      console.error("Request failed:", error);
+      showError(error.message || "Unable to save listing");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const res = await fetch(`/api/listing/delete/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Delete failed");
+      }
+
+      showLoading("Deleting listing");
+      showSuccess("Listing deleted");
+      navigate("/");
+    } catch (error) {
+      showError(error.message || "Unable to delete listing");
+    }
   };
 
   return (
@@ -198,20 +255,17 @@ export default function EditListing({ mode: propMode = "new" }) {
           <h1 className="text-3xl font-bold text-[#222222] md:text-4xl">
             {heading}
           </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Update your property details and keep your listing fresh.
-          </p>
+          <p className="mt-2 text-sm text-gray-500">{subheading}</p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Left Side Preview */}
-          <div className="rounded-3xl bg-white p-4 shadow-md">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="min-w-0 rounded-3xl bg-white p-4 shadow-md">
             <div className="grid gap-4 sm:grid-cols-2">
-              {formData.URL?.length > 0 ? (
-                formData.URL.map((img, index) => (
-                  <div key={index} className="overflow-hidden rounded-2xl">
+              {imagePreviews.length > 0 ? (
+                imagePreviews.map((image, index) => (
+                  <div key={`${image.previewUrl}-${index}`} className="overflow-hidden rounded-2xl">
                     <img
-                      src={img}
+                      src={image.previewUrl}
                       alt={`Preview ${index + 1}`}
                       className="h-[180px] w-full object-cover"
                     />
@@ -225,13 +279,13 @@ export default function EditListing({ mode: propMode = "new" }) {
             </div>
 
             <div className="mt-5 px-1">
-              <h2 className="text-3xl font-bold text-orange-600">
+              <h2 className="break-words text-3xl font-bold text-orange-600">
                 {formData.title || "Listing Title"}
               </h2>
 
               <div className="mt-3 flex items-center gap-2 text-gray-600">
                 <MapPin size={18} />
-                <p className="text-base">
+                <p className="break-words text-base">
                   {formData.location || "Location"}
                   {formData.country ? `, ${formData.country}` : ""}
                 </p>
@@ -239,52 +293,48 @@ export default function EditListing({ mode: propMode = "new" }) {
 
               <div className="mt-5">
                 <p className="text-3xl font-bold text-orange-500">
-                  ₹{formData.price || "0"}
+                  Rs. {formData.price || "0"}
                   <span className="ml-1 text-lg font-medium text-gray-500">
                     / night
                   </span>
                 </p>
               </div>
 
-              <p className="mt-5 text-base leading-7 text-gray-700">
+              <p className="mt-5 break-words text-base leading-7 text-gray-700">
                 {formData.description || "Description will appear here..."}
               </p>
-              <button
-                hidden={mode !== "edit"}
-                type="button"
-                onClick={() => setShowDelete(true)}
-                className="cursor-pointer mt-4 w-full rounded-2xl border border-red-200 bg-red-50 px-6 py-3 text-sm font-semibold text-red-600 hover:bg-red-100 transition"
-              >
-                Delete Listing
-              </button>
+
+              {pageMode === "edit" && (
+                <button
+                  type="button"
+                  onClick={() => setShowDelete(true)}
+                  className="mt-4 w-full cursor-pointer rounded-2xl border border-red-200 bg-red-50 px-6 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                >
+                  Delete Listing
+                </button>
+              )}
             </div>
           </div>
+
           {showDelete && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-              <div className="bg-white rounded-2xl p-6 w-[350px]">
+            <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+              <div className="w-[350px] rounded-2xl bg-white p-6">
                 <h2 className="text-lg font-semibold">Delete Listing?</h2>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="mt-2 text-sm text-gray-500">
                   This action cannot be undone.
                 </p>
 
                 <div className="mt-4 flex gap-3">
                   <button
                     onClick={handleDelete}
-                    className="flex-1 bg-red-500 text-white py-2 rounded-xl cursor-pointer 
-                                transition-all duration-300
-                                hover:bg-red-600 hover:shadow-[0_0_15px_rgba(239,68,68,0.7)]
-                                active:scale-95"
+                    className="flex-1 cursor-pointer rounded-xl bg-red-500 py-2 text-white transition-all duration-300 hover:bg-red-600 hover:shadow-[0_0_15px_rgba(239,68,68,0.7)] active:scale-95"
                   >
                     Delete
                   </button>
 
                   <button
                     onClick={() => setShowDelete(false)}
-                    className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-xl cursor-pointer
-                                transition-all duration-300 ease-in-out
-                                hover:bg-gray-100 hover:text-black
-                                hover:shadow-[0_0_12px_rgba(0,0,0,0.15)]
-                                active:opacity-90"
+                    className="flex-1 cursor-pointer rounded-xl border border-gray-300 py-2 text-gray-700 transition-all duration-300 ease-in-out hover:bg-gray-100 hover:text-black hover:shadow-[0_0_12px_rgba(0,0,0,0.15)] active:opacity-90"
                   >
                     Cancel
                   </button>
@@ -292,11 +342,11 @@ export default function EditListing({ mode: propMode = "new" }) {
               </div>
             </div>
           )}
-          {/* Right Side Form */}
+
           <form
             encType="multipart/form-data"
             onSubmit={handleSubmit}
-            className="rounded-3xl bg-white p-6 shadow-md md:p-8"
+            className="w-full min-w-0 max-w-full rounded-3xl bg-white p-6 shadow-md md:p-8"
           >
             <div className="grid gap-5">
               <div>
@@ -310,12 +360,12 @@ export default function EditListing({ mode: propMode = "new" }) {
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="Enter listing title"
-                  className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                  className="w-full min-w-0 rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                 />
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div className="min-w-0">
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <MapPin size={16} />
                     Location
@@ -326,11 +376,11 @@ export default function EditListing({ mode: propMode = "new" }) {
                     value={formData.location}
                     onChange={handleChange}
                     placeholder="Enter city or place"
-                    className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    className="w-full min-w-0 rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <label className="mb-2 text-sm font-semibold text-gray-700">
                     Country
                   </label>
@@ -340,7 +390,7 @@ export default function EditListing({ mode: propMode = "new" }) {
                     value={formData.country}
                     onChange={handleChange}
                     placeholder="Enter country"
-                    className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                    className="w-full min-w-0 rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
               </div>
@@ -354,51 +404,70 @@ export default function EditListing({ mode: propMode = "new" }) {
                   type="number"
                   name="price"
                   value={formData.price}
-                  onWheel={(e) => e.currentTarget.blur()}
+                  onWheel={(event) => event.currentTarget.blur()}
                   onChange={handleChange}
                   placeholder="Enter price"
-                  className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                  className="w-full min-w-0 rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                 />
               </div>
 
               <div>
                 <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <ImageIcon size={16} />
-                  Image URLs
+                  Listing Images
                 </label>
 
-                <div className="space-y-3">
-                  {formData.URL.map((url, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <input
-                        type="file"
-                        multiple
-                        onChange={(e) => {
-                          setImages([...e.target.files]);
-                        }}
-                        placeholder={`Image URL ${index + 1}`}
-                        className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                      />
-                      <br />
+                <input
+                  id="listing-images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFilesChange}
+                  className="hidden"
+                />
 
+                <label
+                  htmlFor="listing-images"
+                  className="flex w-full min-w-0 cursor-pointer items-center gap-4 rounded-2xl border border-gray-200 px-4 py-4 transition hover:border-orange-300 hover:bg-orange-50/40"
+                >
+                  <span className="shrink-0 rounded-xl bg-orange-50 px-5 py-3 text-sm font-semibold text-orange-600">
+                    Choose files
+                  </span>
+                  <span className="min-w-0 truncate text-sm text-gray-600">
+                    {fileInputText}
+                  </span>
+                </label>
+
+                <div className="mt-4 space-y-3">
+                  {imagePreviews.map((image, index) => (
+                    <div
+                      key={`${image.previewUrl}-row-${index}`}
+                      className="flex min-w-0 items-center gap-3 rounded-2xl border border-gray-200 p-3"
+                    >
+                      <img
+                        src={image.previewUrl}
+                        alt={`Listing ${index + 1}`}
+                        className="h-16 w-20 shrink-0 rounded-xl object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="min-w-0 truncate text-sm font-medium text-gray-700">
+                          {image.kind === "existing"
+                            ? `Current image ${index + 1}`
+                            : image.file.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {image.kind === "existing" ? "Already saved" : "Ready to upload"}
+                        </p>
+                      </div>
                       <button
                         type="button"
-                        onClick={() => removeImageField(index)}
-                        className="rounded-2xl border border-red-200 bg-red-50 p-3 text-red-500 transition hover:bg-red-100 cursor-pointer"
+                        onClick={() => removeImage(index)}
+                        className="shrink-0 cursor-pointer rounded-2xl border border-red-200 bg-red-50 p-3 text-red-500 transition hover:bg-red-100"
                       >
                         <Trash2 size={18} />
                       </button>
                     </div>
                   ))}
-
-                  <button
-                    type="button"
-                    onClick={addImageField}
-                    className="cursor-pointer flex items-center gap-2 rounded-2xl border border-dashed border-orange-300 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-600 transition hover:bg-orange-100"
-                  >
-                    <Plus size={16} />
-                    Add another image URL
-                  </button>
                 </div>
               </div>
 
@@ -413,16 +482,16 @@ export default function EditListing({ mode: propMode = "new" }) {
                   value={formData.description}
                   onChange={handleChange}
                   placeholder="Write something about your place..."
-                  className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                  className="w-full min-w-0 rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                 />
               </div>
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <button
-                disabled={isSubmiting}
+                disabled={isSubmitting}
                 type="submit"
-                className="flex-1 rounded-2xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 cursor-pointer"
+                className="w-full min-w-0 cursor-pointer rounded-2xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {submitButtonText}
               </button>
@@ -432,7 +501,7 @@ export default function EditListing({ mode: propMode = "new" }) {
                   navigate(redirect);
                 }}
                 type="button"
-                className="cursor-pointer flex-1 rounded-2xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                className="w-full min-w-0 cursor-pointer rounded-2xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
               >
                 Cancel
               </button>
