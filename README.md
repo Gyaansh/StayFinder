@@ -1,5 +1,4 @@
 # WanderLust
-<<<<<<< HEAD
 A dynamic E platform for booking hotels, property &amp; many more... 
 =======
 
