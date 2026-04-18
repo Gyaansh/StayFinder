@@ -1,5 +1,6 @@
 import Listing from "../Models/listingSchema.js";
 import processListingImages from "../Utils/processListingImages.js";
+import deleteCloudinaryImages from "../Utils/deleteCloudinaryImages.js";
 
 async function updateListing(req, res) {
   try {
@@ -17,6 +18,10 @@ async function updateListing(req, res) {
     const keptImages = listing.images.filter((image) =>
       keepImageIds.includes(image.public_id),
     );
+    const removedImageIds = listing.images
+      .filter((image) => !keepImageIds.includes(image.public_id))
+      .map((image) => image.public_id);
+
     const uploadedImages = await processListingImages(req.files);
     const nextImages = [...keptImages, ...uploadedImages];
 
@@ -34,6 +39,11 @@ async function updateListing(req, res) {
     listing.images = nextImages;
 
     const updatedListing = await listing.save();
+
+    // Delete un-kept images from Cloudinary without waiting for response to keep it quick
+    if (removedImageIds.length > 0) {
+      deleteCloudinaryImages(removedImageIds);
+    }
 
     res.status(200).json({
       success: true,

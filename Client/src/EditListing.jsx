@@ -241,8 +241,10 @@ export default function EditListing({ mode = "new" }) {
       }
 
       showLoading("Deleting listing");
-      showSuccess("Listing deleted");
-      navigate("/");
+      setTimeout(() => {
+        showSuccess("Listing deleted");
+        navigate("/");
+      }, 2000);
     } catch (error) {
       showError(error.message || "Unable to delete listing");
     }
@@ -346,10 +348,10 @@ export default function EditListing({ mode = "new" }) {
           <form
             encType="multipart/form-data"
             onSubmit={handleSubmit}
-            className="w-full min-w-0 max-w-full rounded-3xl bg-white p-6 shadow-md md:p-8"
+            className="w-full min-w-0 max-w-full overflow-hidden rounded-3xl bg-white p-6 shadow-md md:p-8"
           >
             <div className="grid gap-5">
-              <div>
+              <div className="min-w-0">
                 <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <Home size={16} />
                   Title
@@ -395,7 +397,7 @@ export default function EditListing({ mode = "new" }) {
                 </div>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <IndianRupee size={16} />
                   Price per night
@@ -411,7 +413,7 @@ export default function EditListing({ mode = "new" }) {
                 />
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <ImageIcon size={16} />
                   Listing Images
@@ -471,7 +473,7 @@ export default function EditListing({ mode = "new" }) {
                 </div>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <FileText size={16} />
                   Description

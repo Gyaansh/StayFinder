@@ -1,29 +1,49 @@
 import fs from "fs/promises";
-import path from "path";
 import sharp from "sharp";
+import { v2 as cloudinary } from "cloudinary";
+import dotenv from "dotenv";
 
-const uploadsDir = path.resolve("Uploads");
+dotenv.config();
 
-const toPublicImage = (filename) => ({
-  public_id: filename,
-  url: `/uploads/${filename}`,
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
 });
 
 async function processListingImages(files = []) {
-  const processedImages = [];
+  const uploadPromises = files.map(async (file) => {
+    try {
+      const compressedBuffer = await sharp(file.path)
+        .resize({ width: 1200, withoutEnlargement: true })
+        .jpeg({ quality: 70 })
+        .toBuffer();
 
-  for (const file of files) {
-    const compressedFilename = `${file.filename}-compressed.jpg`;
-    const compressedPath = path.join(uploadsDir, compressedFilename);
+      const uploadResult = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "airbnb_listings" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        uploadStream.end(compressedBuffer);
+      });
 
-    await sharp(file.path).resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 70 }).toFile(compressedPath);
+      await fs.unlink(file.path).catch(() => {});
 
-    processedImages.push(toPublicImage(compressedFilename));
+      return {
+        public_id: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      };
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      await fs.unlink(file.path).catch(() => {});
+      throw error;
+    }
+  });
 
-    await fs.unlink(file.path).catch(() => {});
-  }
-
-  return processedImages;
+  return await Promise.all(uploadPromises);
 }
 
 export default processListingImages;
