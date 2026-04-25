@@ -198,7 +198,11 @@ export default function EditListing({ mode = "new" }) {
     });
 
     const data = await res.json();
-
+    if(res.ok){
+      setTimeout(() => {
+        showSuccess(successText);
+      }, 2000);
+    }
     if (!res.ok) {
       throw new Error(data.message || "Request failed");
     }
@@ -218,11 +222,12 @@ export default function EditListing({ mode = "new" }) {
       setIsSubmitting(true);
       showLoading(loadingText);
       await fetchApi();
-      showSuccess(successText);
       navigate(redirect);
     } catch (error) {
       console.error("Request failed:", error);
-      showError(error.message || "Unable to save listing");
+      setTimeout(() => {
+        showError(error.message || "Unable to save listing");
+      }, 2000);
     } finally {
       setIsSubmitting(false);
     }
