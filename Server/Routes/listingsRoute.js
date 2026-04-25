@@ -11,7 +11,7 @@ import isLoggedIn from "../Utils/isLoggedIn.js";
 import updateListing from "../Controllers/updateListing.js";
 import isOwner from "../Utils/isOwner.js";
 import deleteListing from "../Controllers/deleteListing.js";
-import getGeocode  from "../Utils/getGeocode.js";
+
 const Router = express.Router();
 const upload = multer({ dest: "./Uploads/" });
 
@@ -24,9 +24,7 @@ Router.post(
   wrapAsync(newListing),
 );
 
-Router.get("/map",(req,res)=>{
-  res.json(getGeocode("delhi"));
-});
+
 // Handle specific listing routes
 Router.get("/:id", wrapAsync(getListingByid));
 

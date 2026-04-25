@@ -2,7 +2,7 @@ import NavBar from "./NavBar";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { showSuccess } from "../Utils/ToastBar";
-
+import FindStay from "../assets/FindStay-logo.svg";
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,13 +47,14 @@ function Header() {
   isLoggedIn();
 
   return (
-    <header className="flex flex-col md:flex-row md:items-center md:justify-between px-6 py-4 bg-white shadow-md gap-4 relative">
+    <header className="flex sticky top-0 z-10 flex-col md:flex-row md:items-center md:justify-between px-6 py-4 bg-white shadow-md gap-4 relative">
       {/* Left */}
       <button
         onClick={() => navigate("/")}
-        className="text-xl font-semibold cursor-pointer"
+        className="text-xl font-semibold cursor-pointer group"
       >
-        Home
+        <img src={FindStay} alt="FindStay Logo" className="h-10 w-auto transition-transform duration-200 group-hover:scale-110" />
+      <span className="text-sm font-medium ">Explore</span>
       </button>
 
       {/* Center */}
