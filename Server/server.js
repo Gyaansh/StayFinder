@@ -21,7 +21,7 @@ const port = 8080;
 
 DbConnect();
 app.use(cors({
-    origin:"*"
+    origin:"https://findstay-1.onrender.com/login"
 }));
 app.use(express.json());
 app.use(express.urlencoded({extended : true}));
