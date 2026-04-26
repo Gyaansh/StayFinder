@@ -23,7 +23,7 @@ const logInUser = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,        // cannot be accessed by JS
       secure: true,         // true in production (HTTPS)
-      sameSite: "strict",
+      sameSite: "none",     //none in prodection
       maxAge: 60 * 24 * 60 * 60 * 1000, // 60 day
     });
 
