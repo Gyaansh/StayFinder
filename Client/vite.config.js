@@ -5,17 +5,17 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
  server: {
-    proxy: {
-      "/api": {
-        target: "https://findstay-29ni.onrender.com",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/uploads": {
-        target: "https://findstay-29ni.onrender.com",
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+    // proxy: {
+    //   "/api": {
+    //     target: "https://findstay-29ni.onrender.com",
+    //     changeOrigin: true,
+    //     secure: false,
+    //   },
+    //   "/uploads": {
+    //     target: "https://findstay-29ni.onrender.com",
+    //     changeOrigin: true,
+    //     secure: false,
+    //   },
+    // },
   }
 })
