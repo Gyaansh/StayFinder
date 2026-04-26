@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
-const DbConnect = ()=>{
 
+const DbConnect = ()=>{
+console.log("ATLAS_URL: ",process.env.ATLAS_URL)
   async function main() {
-    await mongoose.connect(process.env.ATLASDB_URL);
+    await mongoose.connect(process.env.ATLAS_URL);
+
   }
 
   main()
@@ -18,5 +20,4 @@ const DbConnect = ()=>{
   //   await Listing.insertMany(newData);
   // }
 }
-DbConnect();
 export default DbConnect;

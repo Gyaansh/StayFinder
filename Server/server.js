@@ -1,4 +1,5 @@
-// import dotenv from "dotenv";
+import dotenv from "dotenv";
+dotenv.config();
 import cors from "cors";
 import DbConnect from "./Config/Database.js"
 import express from "express";
@@ -7,21 +8,12 @@ import  LocalStrategy from 'passport-local';
 import cookieParser from "cookie-parser";
 
 import listingsRoute from "./Routes/listingsRoute.js"
-import userRoute from "./Routes/userRoute.js";
 import ExpressError from "./Utils/ExpressError.js";
+import userRoute from "./Routes/userRoute.js";
 import User from "./Models/userSchema.js";
 
 import path from "path";
-import dotenv from "dotenv";
 
-// Force the exact file
-dotenv.config({ path: path.resolve("./.env") });
-
-console.log("ENV PATH LOADED");
-console.log("KEY:", process.env.GOOGLE_MAPS_API_KEY);
-
-
-    dotenv.config();
 
 
 const app = express();
