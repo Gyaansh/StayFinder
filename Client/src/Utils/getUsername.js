@@ -19,3 +19,4 @@ async function getUsername() {
     return null;
   }
 }
+export default getUsername
