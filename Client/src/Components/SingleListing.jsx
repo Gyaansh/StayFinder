@@ -14,7 +14,7 @@ const SingleListing = () => {
 
   const fetchListing = useCallback(async () => {
     try {
-      const res = await fetch(`/api/listing/${id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listing/${id}`);
       const data = await res.json();
       const owner = data.data.owner.username;
       const images = data.data.images || [];

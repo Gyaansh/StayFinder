@@ -8,7 +8,7 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation();
 
   useEffect(() => {
-    fetch("/api/user/checkauth", {
+    fetch(`${import.meta.env.VITE_API_URL}/api/user/checkauth`, {
       credentials: "include",
     })
       .then((res) => {

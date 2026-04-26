@@ -163,7 +163,7 @@ export default function EditListing({ mode = "new" }) {
 
   const fetchApi = async () => {
     const api =
-      pageMode === "edit" ? `/api/listing/edit/${id}` : `/api/listing/newlisting`;
+      pageMode === "edit" ? `${import.meta.env.VITE_API_URL}/api/listing/edit/${id}` : `${import.meta.env.VITE_API_URL}/api/listing/newlisting`;
     const apiMethod = pageMode === "edit" ? "PUT" : "POST";
     const uploadFiles = new FormData();
 
@@ -235,7 +235,7 @@ export default function EditListing({ mode = "new" }) {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(`/api/listing/delete/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listing/delete/${id}`, {
         method: "DELETE",
         credentials: "include",
       });

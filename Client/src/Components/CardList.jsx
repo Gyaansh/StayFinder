@@ -10,13 +10,13 @@ const CardList = ({ ownerId }) => {
     const type = searchParams.get('type') || 'place';
 
     useEffect(()=>{
-        let url = search ? `/api/listing?search=${encodeURIComponent(search)}&type=${type}` : "/api/listing";
+        let url = search ? `${import.meta.env.VITE_API_URL}/api/listing?search=${encodeURIComponent(search)}&type=${type}` : "${import.meta.env.VITE_API_URL}/api/listing";
         if (ownerId) {
-            url = `/api/listing?owner=${ownerId}`;
+            url = `${import.meta.env.VITE_API_URL}/api/listing?owner=${ownerId}`;
         } else if (search) {
-            url = `/api/listing?search=${encodeURIComponent(search)}&type=${type}`;
+            url = `${import.meta.env.VITE_API_URL}/api/listing?search=${encodeURIComponent(search)}&type=${type}`;
         } else {
-            url = `/api/listing`;
+            url = `${import.meta.env.VITE_API_URL}/api/listing`;
         }
 
         setLoading(true);

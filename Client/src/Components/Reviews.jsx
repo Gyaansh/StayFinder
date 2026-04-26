@@ -46,7 +46,7 @@ export default function Reviews({ listingId, reviews = [], onReviewAdded }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/listing/${listingId}/reviews`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listing/${listingId}/reviews`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

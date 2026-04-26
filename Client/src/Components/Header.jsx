@@ -14,7 +14,7 @@ function Header() {
 
   const logOutUser = async ()=>{
     try{
-      const res = await fetch("/api/user/logout",{
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/logout`,{
       method :"POST",
       credentials: "include",
       headers : {
@@ -37,7 +37,7 @@ function Header() {
   useEffect(() => {
     const isLoggedIn = async () => {
       try {
-        const res = await fetch("/api/user/checkauth", {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/checkauth`, {
           credentials: "include",
         });
         const data = await res.json();

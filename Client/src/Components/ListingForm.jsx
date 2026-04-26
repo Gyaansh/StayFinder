@@ -78,7 +78,7 @@ const ListingForm = () => {
 
 const fetchApi = async()=>{
    try {
-    const res = await fetch("/api/listing/newlisting", {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listing/newlisting`, {
       method: "POST",
       credentials : "include",
       headers: {
